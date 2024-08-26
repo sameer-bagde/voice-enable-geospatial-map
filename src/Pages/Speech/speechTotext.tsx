@@ -54,11 +54,6 @@ const SpeechToText: React.FC<SpeechToTextProps> = ({ onSearch }) => {
         timeoutRef.current = setTimeout(() => {
           setTranscript('');
         }, 3000);
-
-        // Only call onSearch when microphone is off
-        if (!isListening) {
-          onSearch(finalTranscript);
-        }
       }
     };
 
@@ -77,7 +72,7 @@ const SpeechToText: React.FC<SpeechToTextProps> = ({ onSearch }) => {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [isListening, onSearch]);
+  }, []);
 
   useEffect(() => {
     if (isListening) {
