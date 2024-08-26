@@ -13,6 +13,7 @@ const SpeechToText: React.FC<SpeechToTextProps> = ({ onSearch }) => {
   const [transcript, setTranscript] = useState<string>('');
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const idleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -47,6 +48,14 @@ const SpeechToText: React.FC<SpeechToTextProps> = ({ onSearch }) => {
       if (finalTranscript) {
         setTranscript(finalTranscript);
 
+        // Reset the 5-minute idle timer whenever speech is detected
+        if (idleTimeoutRef.current) {
+          clearTimeout(idleTimeoutRef.current);
+        }
+        idleTimeoutRef.current = setTimeout(() => {
+          setIsListening(false);  // Stop listening after 5 minutes of no speech
+        }, 300000); // 5 minutes = 300,000 milliseconds
+
         // Clear transcript after 3 seconds of inactivity
         if (timeoutRef.current) {
           clearTimeout(timeoutRef.current);
@@ -71,14 +80,25 @@ const SpeechToText: React.FC<SpeechToTextProps> = ({ onSearch }) => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
+      if (idleTimeoutRef.current) {
+        clearTimeout(idleTimeoutRef.current);
+      }
     };
   }, []);
 
   useEffect(() => {
     if (isListening) {
       recognitionRef.current?.start();
+
+      // Start the 5-minute idle timer when the microphone starts listening
+      idleTimeoutRef.current = setTimeout(() => {
+        setIsListening(false);  // Stop listening after 5 minutes of no speech
+      }, 300000); // 5 minutes = 300,000 milliseconds
     } else {
       recognitionRef.current?.stop();
+      if (idleTimeoutRef.current) {
+        clearTimeout(idleTimeoutRef.current);
+      }
     }
   }, [isListening]);
 
