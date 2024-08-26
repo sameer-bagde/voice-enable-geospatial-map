@@ -19,7 +19,7 @@ const MapView: React.FC<MapViewProps> = ({ searchTerm }) => {
       style: 'mapbox://styles/sameer-bagde/cm00rbx5s006c01qt6kb2704o', 
       center: [79.036844, 21.464237],
       zoom: 4,
-      projection: 'equirectangular',
+      projection: 'globe',
     });
 
     return () => {
