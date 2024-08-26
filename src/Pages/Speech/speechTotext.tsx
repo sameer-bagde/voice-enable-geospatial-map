@@ -13,22 +13,25 @@ const SpeechToText: React.FC<SpeechToTextProps> = ({ onSearch }) => {
   const [transcript, setTranscript] = useState<string>('');
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const isRecognitionRunning = useRef<boolean>(false);
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
+    if (!SpeechRecognition) {
+      console.error('SpeechRecognition API is not supported in this browser.');
+      return;
+    }
 
+    const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'en-IN';
 
     recognition.onstart = () => {
-      isRecognitionRunning.current = true;
+      console.log('Speech recognition started.');
     };
 
     recognition.onend = () => {
-      isRecognitionRunning.current = false;
+      console.log('Speech recognition ended.');
     };
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
@@ -44,6 +47,7 @@ const SpeechToText: React.FC<SpeechToTextProps> = ({ onSearch }) => {
       if (finalTranscript) {
         setTranscript(finalTranscript);
 
+        // Clear transcript after 3 seconds of inactivity
         if (timeoutRef.current) {
           clearTimeout(timeoutRef.current);
         }
@@ -51,7 +55,10 @@ const SpeechToText: React.FC<SpeechToTextProps> = ({ onSearch }) => {
           setTranscript('');
         }, 3000);
 
-        onSearch(finalTranscript); // Update the map view with the search term
+        // Only call onSearch when microphone is off
+        if (!isListening) {
+          onSearch(finalTranscript);
+        }
       }
     };
 
@@ -70,10 +77,23 @@ const SpeechToText: React.FC<SpeechToTextProps> = ({ onSearch }) => {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [onSearch]);
+  }, [isListening, onSearch]);
+
+  useEffect(() => {
+    if (isListening) {
+      recognitionRef.current?.start();
+    } else {
+      recognitionRef.current?.stop();
+    }
+  }, [isListening]);
 
   const handleStartStopListening = () => {
     setIsListening((prev) => !prev);
+  };
+
+  const handleSearchInput = (searchTerm: string) => {
+    // Call onSearch for search input
+    onSearch(searchTerm);
   };
 
   return (
@@ -93,7 +113,7 @@ const SpeechToText: React.FC<SpeechToTextProps> = ({ onSearch }) => {
           isListening={isListening} 
           onMicClick={handleStartStopListening} 
           micIcon={isListening ? MicOn : MicOff} 
-          onSearch={onSearch}
+          onSearch={handleSearchInput}
         />
       </div>
 
