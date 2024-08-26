@@ -1,58 +1,23 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useEffect } from 'react';
+import "./App.css";
+import { Suspense, useState } from "react";
+import SpeechToText from "./Pages/Speech/speechTotext";
+import MapView from "./Pages/Map/mapView";
 
-const SpeechRecognition =
-  window.SpeechRecognition || (window as any).webkitSpeechRecognition;
+function App() {
+  const [searchTerm, setSearchTerm] = useState<string>('');
 
-const recognition = new SpeechRecognition();
-
-const App: React.FC = () => {
-  const [transcript, setTranscript] = useState<string>('');
-  const [isListening, setIsListening] = useState<boolean>(false);
-
-  useEffect(() => {
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'hi-IN';
-
-
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      const current = event.resultIndex;
-      const transcriptText = event.results[current][0].transcript;
-      setTranscript(transcriptText);
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
-    };
-
-    return () => {
-      recognition.stop();
-    };
-  }, []);
-
-  const startListening = () => {
-    setIsListening(true);
-    recognition.start();
-  };
-
-  const stopListening = () => {
-    setIsListening(false);
-    recognition.stop();
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
   };
 
   return (
-    <div className="App">
-      <h1>Web Speech API Example</h1>
-      <button onClick={startListening} disabled={isListening}>
-        Start Listening
-      </button>
-      <button onClick={stopListening} disabled={!isListening}>
-        Stop Listening
-      </button>
-      <p>{transcript}</p>
-    </div>
+    <>
+      <Suspense fallback={<div>Loading...</div>}>
+        <MapView searchTerm={searchTerm} />
+        <SpeechToText onSearch={handleSearch} />
+      </Suspense>
+    </>
   );
-};
+}
 
 export default App;
