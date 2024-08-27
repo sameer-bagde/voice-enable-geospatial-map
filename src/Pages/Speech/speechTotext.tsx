@@ -37,26 +37,26 @@ const SpeechToText: React.FC<SpeechToTextProps> = ({ onSearch }) => {
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       let finalTranscript = '';
-
+    
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcriptText = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
           finalTranscript = transcriptText;
         }
       }
-
+    
       if (finalTranscript) {
         setTranscript(finalTranscript);
-
-        // Reset the 5-minute idle timer whenever speech is detected
+    
+        onSearch(finalTranscript);
+    
         if (idleTimeoutRef.current) {
           clearTimeout(idleTimeoutRef.current);
         }
         idleTimeoutRef.current = setTimeout(() => {
-          setIsListening(false);  // Stop listening after 5 minutes of no speech
-        }, 300000); // 5 minutes = 300,000 milliseconds
-
-        // Clear transcript after 3 seconds of inactivity
+          setIsListening(false);  
+        }, 300000); 
+    
         if (timeoutRef.current) {
           clearTimeout(timeoutRef.current);
         }
@@ -90,10 +90,9 @@ const SpeechToText: React.FC<SpeechToTextProps> = ({ onSearch }) => {
     if (isListening) {
       recognitionRef.current?.start();
 
-      // Start the 5-minute idle timer when the microphone starts listening
       idleTimeoutRef.current = setTimeout(() => {
-        setIsListening(false);  // Stop listening after 5 minutes of no speech
-      }, 300000); // 5 minutes = 300,000 milliseconds
+        setIsListening(false);  
+      }, 300000); 
     } else {
       recognitionRef.current?.stop();
       if (idleTimeoutRef.current) {
@@ -107,7 +106,6 @@ const SpeechToText: React.FC<SpeechToTextProps> = ({ onSearch }) => {
   };
 
   const handleSearchInput = (searchTerm: string) => {
-    // Call onSearch for search input
     onSearch(searchTerm);
   };
 
